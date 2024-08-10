@@ -12,7 +12,7 @@
         <h1>AgriAdvice360</h1>
         <form action="{{ url_for('submit_form') }}" method="POST" enctype="multipart/form-data">
             <label for="state">Select State:</label>
-            <select id="state" name="state" required>
+            <select id="state" name="state" required onchange="loadCities()">
                 <option value="" disabled selected>Select your state</option>
                 <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
                 <option value="Andhra Pradesh">Andhra Pradesh</option>
@@ -51,11 +51,14 @@
                 <option value="West Bengal">West Bengal</option>
             </select>
 
-            <label for="postalcode">Postal Code:</label>
-            <input type="text" id="postalcode" name="postalcode" required>
+            <label for="city">Select City:</label>
+            <select id="city" name="city" required>
+                <option value="" disabled selected>Select your city</option>
+                <!-- Cities will be dynamically populated based on the selected state -->
+            </select>
 
-            <label for="location">Your Location:</label>
-            <div id="map"></div>
+            <label for="location">Select your exact location from below map:</label>
+            <div id="map" style="height: 300px;"></div>
             <input type="hidden" id="latitude" name="latitude">
             <input type="hidden" id="longitude" name="longitude">
 
@@ -71,5 +74,81 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script>
+        function loadCities() {
+            var state = document.getElementById("state").value;
+            var citySelect = document.getElementById("city");
+
+            // Clear existing cities
+            citySelect.innerHTML = '<option value="" disabled selected>Select your city</option>';
+
+            // Define cities for each state
+            var cities = {
+                "Andaman and Nicobar Islands": ["Port Blair", "Diglipur", "Rangat"],
+                "Andhra Pradesh": ["Vijayawada", "Visakhapatnam", "Guntur", "Tirupati", "Kakinada", "Nellore", "Kurnool", "Anantapur", "Rajahmundry", "Ongole", "Kadapa", "Eluru", "Srikakulam", "Chittoor"],
+                "Arunachal Pradesh": ["Itanagar", "Pasighat", "Tawang", "Ziro", "Bomdila", "Aalo", "Tezu", "Naharlagun", "Khonsa", "Yingkiong"],
+                "Assam": ["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Tezpur", "Nagaon", "Tinsukia", "Bongaigaon", "Sivasagar", "Goalpara", "Lakhimpur"],
+                "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga", "Purnia", "Bihar Sharif", "Arrah", "Begusarai", "Katihar", "Munger", "Chhapra", "Saharsa", "Sasaram", "Hajipur"],
+                "Chandigarh": ["Chandigarh"],
+                "Chhattisgarh": ["Raipur", "Bilaspur", "Durg", "Korba", "Bhilai", "Rajnandgaon", "Jagdalpur", "Raigarh", "Ambikapur", "Dhamtari"],
+                "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Silvassa"],
+                "Delhi": ["New Delhi", "Dwarka", "Rohini", "Saket", "Karol Bagh", "Connaught Place", "Lajpat Nagar", "Vasant Kunj", "Shahdara", "Janakpuri", "Punjabi Bagh", "Kalkaji"],
+                "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda", "Bicholim", "Curchorem", "Valpoi", "Sanquelim", "Canacona"],
+                "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Junagadh", "Gandhinagar", "Anand", "Nadiad", "Navsari", "Morbi", "Mehsana", "Surendranagar", "Bharuch", "Patan"],
+                "Haryana": ["Gurugram", "Faridabad", "Panipat", "Hisar", "Ambala", "Karnal", "Rohtak", "Yamunanagar", "Sirsa", "Sonipat", "Panchkula", "Bhiwani", "Bahadurgarh", "Jind"],
+                "Himachal Pradesh": ["Shimla", "Manali", "Dharamshala", "Solan", "Mandi", "Palampur", "Hamirpur", "Kullu", "Una", "Chamba", "Nahan", "Kangra", "Bilaspur", "Kinnaur"],
+                "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Hazaribagh", "Giridih", "Ramgarh", "Medininagar", "Chaibasa", "Gumla", "Dumka"],
+                "Karnataka": ["Bangalore", "Mysore", "Mangalore", "Hubli", "Belgaum", "Davangere", "Tumkur", "Bijapur", "Shivamogga", "Gulbarga", "Udupi", "Bellary", "Dharwad", "Raichur", "Mandya", "Hassan", "Bhadravati"],
+                "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Kannur", "Kollam", "Thrissur", "Alappuzha", "Palakkad", "Malappuram", "Kottayam", "Kasaragod", "Pathanamthitta", "Idukki", "Varkala", "Attingal"],
+                "Ladakh": ["Leh", "Kargil"],
+                "Lakshadweep": ["Kavaratti", "Agatti", "Amini", "Andrott", "Kalpeni", "Kadmat", "Chetlat"],
+                "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain", "Sagar", "Ratlam", "Rewa", "Satna", "Dewas", "Murwara", "Chhindwara", "Guna", "Khandwa", "Shivpuri", "Vidisha", "Sehore", "Mandsaur", "Neemuch", "Hoshangabad"],
+                "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Thane", "Solapur", "Amravati", "Kolhapur", "Akola", "Jalgaon", "Latur", "Ahmednagar", "Chandrapur", "Parbhani", "Nanded", "Beed", "Satara", "Ratnagiri", "Sangli", "Wardha", "Dhule", "Bhusawal"],
+                "Manipur": ["Imphal", "Churachandpur", "Thoubal", "Bishnupur", "Kakching", "Senapati", "Ukhrul", "Tamenglong"],
+                "Meghalaya": ["Shillong", "Tura", "Nongpoh", "Jowai", "Baghmara", "Williamnagar", "Nongstoin", "Mairang"],
+                "Mizoram": ["Aizawl", "Lunglei", "Serchhip", "Champhai", "Kolasib", "Lawngtlai", "Mamit", "Saiha"],
+                "Nagaland": ["Kohima", "Dimapur", "Mokokchung", "Tuensang", "Wokha", "Zunheboto", "Phek", "Mon", "Kiphire", "Longleng"],
+                "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Puri", "Berhampur", "Sambalpur", "Balasore", "Baripada", "Bhadrak", "Jeypore", "Bargarh", "Angul", "Dhenkanal", "Rayagada"],
+                "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam"],
+                "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Hoshiarpur", "Moga", "Pathankot", "Barnala", "Firozpur", "Phagwara", "Rupnagar", "Abohar", "Malerkotla", "Faridkot"],
+                "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner", "Ajmer", "Alwar", "Bhilwara", "Sikar", "Pali", "Tonk", "Chittorgarh", "Bundi", "Nagaur", "Jhunjhunu", "Sawai Madhopur", "Hanumangarh", "Barmer", "Banswara", "Jhalawar"],
+                "Sikkim": ["Gangtok", "Namchi", "Gyalshing", "Mangan", "Rangpo"],
+                "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Erode", "Vellore", "Thoothukudi", "Dindigul", "Thanjavur", "Hosur", "Nagercoil", "Kanchipuram", "Kumbakonam", "Tiruvannamalai", "Cuddalore", "Karaikudi", "Sivakasi", "Neyveli", "Ambattur"],
+                "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Mahbubnagar", "Adilabad", "Siddipet", "Miryalaguda", "Ramagundam", "Nalgonda", "Suryapet"],
+                "Tripura": ["Agartala", "Udaipur", "Kailashahar", "Dharmanagar", "Belonia", "Ambassa", "Khowai", "Teliamura"],
+                "Uttar Pradesh": ["Lucknow", "Kanpur", "Agra", "Varanasi", "Meerut", "Allahabad", "Bareilly", "Aligarh", "Moradabad", "Saharanpur", "Gorakhpur", "Noida", "Jhansi", "Firozabad", "Muzaffarnagar", "Mathura", "Rampur", "Shahjahanpur", "Faizabad", "Hapur", "Etawah", "Mirzapur"],
+                "Uttarakhand": ["Dehradun", "Haridwar", "Nainital", "Haldwani", "Rudrapur", "Roorkee", "Kashipur", "Rishikesh", "Pithoragarh", "Tehri", "Almora", "Bageshwar"],
+                "West Bengal": ["Kolkata", "Siliguri", "Asansol", "Durgapur", "Howrah", "Bardhaman", "Berhampore", "Kharagpur", "Haldia", "Jalpaiguri", "Nabadwip", "Purulia", "Ranaghat", "Balurghat", "Krishnanagar", "Chinsurah", "Santipur", "Bangaon"]
+            };
+
+            if (cities[state]) {
+                cities[state].forEach(function(city) {
+                    var option = document.createElement("option");
+                    option.value = city;
+                    option.text = city;
+                    citySelect.appendChild(option);
+                });
+            }
+        }
+
+        var map = L.map('map').setView([20.5937, 78.9629], 5); // Center map to India
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(map);
+
+        var marker;
+
+        function onMapClick(e) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker(e.latlng).addTo(map);
+            document.getElementById("latitude").value = e.latlng.lat;
+            document.getElementById("longitude").value = e.latlng.lng;
+        }
+
+        map.on('click', onMapClick);
+    </script>
 </body>
 </html>
