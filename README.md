@@ -58,9 +58,13 @@ Farmers often struggle with:
 1. Fork our repository in your github
 2. Clone it into your machine
 3. In terminal:
-    1. `pip install Flask pdfplumber requests Werkzeug` to install all dependencies
-    2. `python app.py` to run the file
-4. Then in browser: `http://127.0.0.1:5000/` to access the website 
+    1. To set up virtual environment: `python3 -m venv venv`
+    2. To activate the created environment:
+       - For Windows: `venv\Scripts\activate`
+       - For macOS/Linux: `source venv/bin/activate`
+    4. `pip install Flask pdfplumber requests Werkzeug` to install all dependencies
+    5. `python app.py` to run the file
+5. Then in browser: `http://127.0.0.1:5000/` to access the website 
 
 
 ## 🤝 **Contributors**
