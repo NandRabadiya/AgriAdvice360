@@ -54,6 +54,14 @@ Farmers often struggle with:
 ### 🌾 **For Agriculture:**
 - Enhanced Productivity
 
+### To run the project:
+1. Fork our repository in your github
+2. Clone it into your machine
+3. In terminal:
+    1. `pip install Flask pdfplumber requests Werkzeug` to install all dependencies
+    2. `python app.py` to run the file
+4. Then in browser: `http://127.0.0.1:5000/` to access the website 
+
 
 ## 🤝 **Contributors**
 
